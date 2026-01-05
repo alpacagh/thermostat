@@ -4,8 +4,6 @@
 DEVICE_PORT ?= /dev/cu.usbserial-0001
 BAUD_RATE ?= 115200
 TCP_PORT ?= 8266
-UDP_PORT ?= 8267
-BROADCAST ?= 255.255.255.255
 
 # Device IP (set after discovery, or override: make telnet DEVICE_IP=192.168.1.100)
 DEVICE_IP ?=
@@ -29,19 +27,9 @@ minicom:
 	@echo "Connecting with minicom..."
 	minicom -D $(DEVICE_PORT) -b $(BAUD_RATE)
 
-## Discover device on LAN (UDP broadcast)
+## Discover device on LAN (TCP scan)
 discover:
-	@echo "Sending discovery broadcast to $(BROADCAST):$(UDP_PORT)..."
-	@python3 -c "\
-import socket; \
-s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM); \
-s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1); \
-s.settimeout(3); \
-s.sendto(b'DISCOVER', ('$(BROADCAST)', $(UDP_PORT))); \
-print('Waiting for response...'); \
-resp, addr = s.recvfrom(1024); \
-print(f'Found: {resp.decode()} from {addr[0]}'); \
-" 2>/dev/null || echo "No device found. Check WiFi config or try: make discover BROADCAST=192.168.1.255"
+	@python3 tools/discover.py
 
 ## Connect to device control port (set DEVICE_IP first)
 telnet:
@@ -59,15 +47,7 @@ endif
 ## Interactive session: discover then connect
 connect:
 	@echo "Discovering device..."
-	@IP=$$(python3 -c "\
-import socket; \
-s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM); \
-s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1); \
-s.settimeout(3); \
-s.sendto(b'DISCOVER', ('$(BROADCAST)', $(UDP_PORT))); \
-resp, addr = s.recvfrom(1024); \
-print(resp.decode().split(',')[1]); \
-" 2>/dev/null) && \
+	@IP=$$(python3 tools/discover.py 2>/dev/null | grep -m1 "^Found:" | awk '{print $$2}') && \
 	if [ -n "$$IP" ]; then \
 		echo "Found device at $$IP"; \
 		echo "Connecting..."; \
@@ -107,5 +87,4 @@ help:
 	@echo ""
 	@echo "Configuration:"
 	@echo "  DEVICE_PORT=$(DEVICE_PORT)"
-	@echo "  BROADCAST=$(BROADCAST)"
 	@echo "  TCP_PORT=$(TCP_PORT)"

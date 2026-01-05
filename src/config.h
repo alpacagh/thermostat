@@ -26,7 +26,6 @@
 
 // Network ports
 #define TCP_SERVER_PORT     8266
-#define UDP_DISCOVERY_PORT  8267
 
 // EEPROM
 #define MAX_SCHEDULES       8

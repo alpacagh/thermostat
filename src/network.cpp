@@ -5,22 +5,18 @@
 #include "relay.h"
 #include "scheduler.h"
 #include <ESP8266WiFi.h>
-#include <WiFiUdp.h>
 #include <time.h>
 
 Network network;
 
 static WiFiServer tcpServer(TCP_SERVER_PORT);
-static WiFiUDP udp;
 
 void Network::begin() {
     WiFi.mode(WIFI_STA);
-    udp.begin(UDP_DISCOVERY_PORT);
     tcpServer.begin();
 }
 
 void Network::loop() {
-    handleUdpDiscovery();
     handleTcpClients();
 
     // Periodic NTP sync
@@ -95,27 +91,6 @@ void Network::setTimezone(int8_t tz) {
     timezone_offset = tz;
 }
 
-void Network::handleUdpDiscovery() {
-    int packetSize = udp.parsePacket();
-    if (packetSize > 0) {
-        char buffer[64];
-        int len = udp.read(buffer, sizeof(buffer) - 1);
-        if (len > 0) {
-            buffer[len] = '\0';
-            if (strstr(buffer, "DISCOVER") != nullptr) {
-                // Send discovery response
-                String response = String(DEVICE_TYPE) + "," +
-                                  getLocalIP() + "," +
-                                  String(TCP_SERVER_PORT) + "," +
-                                  PROTOCOL_VERSION;
-                udp.beginPacket(udp.remoteIP(), udp.remotePort());
-                udp.write(response.c_str());
-                udp.endPacket();
-            }
-        }
-    }
-}
-
 void Network::handleTcpClients() {
     WiFiClient client = tcpServer.accept();
     if (!client) return;
@@ -141,6 +116,10 @@ void Network::handleTcpClients() {
 String Network::processCommand(const String& cmd) {
     String command = cmd;
     command.toUpperCase();
+
+    if (command.startsWith("WHOAMI")) {
+        return "OK THERMOSTAT,v1.0";
+    }
 
     if (command.startsWith("STATUS")) {
         char buf[128];

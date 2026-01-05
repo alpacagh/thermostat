@@ -24,7 +24,6 @@ private:
     int8_t timezone_offset = 0;
     unsigned long last_ntp_sync = 0;
 
-    void handleUdpDiscovery();
     void handleTcpClients();
     String processCommand(const String& cmd);
 };
