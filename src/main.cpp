@@ -7,6 +7,7 @@
 #include "network.h"
 #include "scheduler.h"
 #include "serial_config.h"
+#include "webserver.h"
 
 // Timing
 static unsigned long last_sensor_read = 0;
@@ -38,6 +39,9 @@ void setup() {
     // Initialize network
     network.begin();
     network.setTimezone(configStore.getTimezone());
+
+    // Initialize web server
+    webServer.begin();
 
     // Connect to WiFi
     if (configStore.hasWifiCredentials()) {
@@ -121,6 +125,9 @@ void loop() {
 
     // Handle network (UDP discovery, TCP commands)
     network.loop();
+
+    // Handle web server
+    webServer.loop();
 
     yield();
 }
