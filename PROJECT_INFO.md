@@ -18,7 +18,7 @@
 - **Output**: 220VAC
 
 ## Power Source
-- **Type**: Power supply for ESP8266 and relay
+- **Type**: mini-usb power supply for esp and relay
 
 ---
 
@@ -28,8 +28,8 @@
 Create a room thermostat system that automatically controls a heater relay to maintain a set air temperature.
 
 ## Deliverables
-1. **Wiring diagram** - See `WIRING.md`
-2. **Firmware requirements** - See `REQUIREMENTS.md`
+1. **Wiring diagram** - See [WIRING.md](WIRING.md)
+2. **Firmware requirements** - See [REQUIREMENTS.md](REQUIREMENTS.md)
 3. **Firmware** - PlatformIO project in `src/`
 
 ---
@@ -38,6 +38,6 @@ Create a room thermostat system that automatically controls a heater relay to ma
 
 | File | Description |
 |------|-------------|
-| `PROJECT_INFO.md` | Hardware components and project overview |
-| `WIRING.md` | Connection diagram and pin mappings |
-| `REQUIREMENTS.md` | Firmware requirements specification |
+| [PROJECT_INFO.md](PROJECT_INFO.md) | Hardware components and project overview |
+| [WIRING.md](WIRING.md) | Connection diagram and pin mappings |
+| [REQUIREMENTS.md](REQUIREMENTS.md) | Firmware requirements specification |
