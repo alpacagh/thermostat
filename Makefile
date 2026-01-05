@@ -22,9 +22,7 @@ upload:
 
 ## Connect to serial TTY (LF line endings)
 monitor:
-	@echo "Connecting to $(DEVICE_PORT) at $(BAUD_RATE) baud (LF mode)..."
-	@echo "Press Ctrl+A then Ctrl+\\ to exit"
-	screen -h 1000 $(DEVICE_PORT) $(BAUD_RATE),cs8,ixon,ixoff,istrip,-cstopb
+	pio device monitor --eol LF
 
 ## Alternative: minicom with LF mode
 minicom:
