@@ -3,6 +3,7 @@
 #include "config_store.h"
 #include "sensor.h"
 #include "relay.h"
+#include "relay_log.h"
 #include "scheduler.h"
 #include <ESP8266WiFi.h>
 #include <time.h>
@@ -200,6 +201,40 @@ String Network::processCommand(const String& cmd) {
                  configStore.getTimezone(),
                  getLocalIP().c_str());
         return String(buf);
+    }
+
+    if (command.startsWith("STATS")) {
+        char buf[128];
+        snprintf(buf, sizeof(buf), "OK on_1h=%u on_6h=%u on_12h=%u on_24h=%u",
+                 relayLog.getOnSeconds(1),
+                 relayLog.getOnSeconds(6),
+                 relayLog.getOnSeconds(12),
+                 relayLog.getOnSeconds(24));
+        return String(buf);
+    }
+
+    if (command.startsWith("LOG")) {
+        int count = 20;  // Default
+        sscanf(cmd.c_str(), "%*s %d", &count);
+        if (count > 1000) count = 1000;
+        if (count < 1) count = 1;
+
+        String result = "OK\n";
+        uint16_t total = relayLog.getLogCount();
+        uint16_t start = (total > count) ? (total - count) : 0;
+
+        for (uint16_t i = start; i < total; i++) {
+            RelayLogEntry entry;
+            if (relayLog.getLogEntry(i, entry)) {
+                char buf[48];
+                snprintf(buf, sizeof(buf), "%u %.1f %s\n",
+                         entry.timestamp,
+                         entry.temp_x10 / 10.0f,
+                         entry.state ? "ON" : "OFF");
+                result += buf;
+            }
+        }
+        return result;
     }
 
     if (command.startsWith("CLOSE")) {

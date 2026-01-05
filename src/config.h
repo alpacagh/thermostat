@@ -23,6 +23,8 @@
 #define NTP_SYNC_INTERVAL       3600000
 #define DISPLAY_UPDATE_INTERVAL 500
 #define MIN_RELAY_CYCLE_MS      5000  // 5 seconds
+#define RELAY_LOG_UPDATE_INTERVAL   60000   // 1 minute - hourly stats update
+#define RELAY_LOG_PERIODIC_INTERVAL 600000  // 10 minutes - periodic log entry
 
 // Network ports
 #define TCP_SERVER_PORT     8266
@@ -34,6 +36,9 @@
 
 // NTP
 #define NTP_SERVER          "pool.ntp.org"
+
+// PlantUML
+#define PLANTUML_DEFAULT_SERVER "http://www.plantuml.com/plantuml/svg/"
 
 // Discovery response
 #define DEVICE_TYPE         "thermostat"

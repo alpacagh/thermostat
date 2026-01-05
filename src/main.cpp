@@ -4,6 +4,7 @@
 #include "display.h"
 #include "sensor.h"
 #include "relay.h"
+#include "relay_log.h"
 #include "network.h"
 #include "scheduler.h"
 #include "serial_config.h"
@@ -13,6 +14,8 @@
 static unsigned long last_sensor_read = 0;
 static unsigned long last_schedule_check = 0;
 static unsigned long last_display_update = 0;
+static unsigned long last_relay_log_update = 0;
+static unsigned long last_relay_log_periodic = 0;
 
 void setup() {
     // Initialize EEPROM config
@@ -35,6 +38,9 @@ void setup() {
 
     // Initialize relay (starts OFF)
     relayControl.begin();
+
+    // Initialize relay logging (uses SPIFFS)
+    relayLog.begin();
 
     // Initialize network
     network.begin();
@@ -121,6 +127,18 @@ void loop() {
             network.getLocalIP().c_str(),
             tempSensor.isValid()
         );
+    }
+
+    // Update relay log statistics (every minute)
+    if (now - last_relay_log_update >= RELAY_LOG_UPDATE_INTERVAL) {
+        last_relay_log_update = now;
+        relayLog.updateHourlyStats(relayControl.isOn());
+    }
+
+    // Periodic relay log entry (every 10 minutes)
+    if (now - last_relay_log_periodic >= RELAY_LOG_PERIODIC_INTERVAL) {
+        last_relay_log_periodic = now;
+        relayLog.logPeriodic(relayControl.isOn(), tempSensor.getTemperature());
     }
 
     // Handle network (UDP discovery, TCP commands)

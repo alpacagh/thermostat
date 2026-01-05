@@ -17,6 +17,9 @@ private:
     void handleApiOverride();
     void handleApiConfigGet();
     void handleApiConfigPost();
+    void handleApiStats();
+    void handleApiLog();
+    void handleApiLogPlantUML();
     void handleNotFound();
 };
 

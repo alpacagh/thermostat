@@ -4,9 +4,11 @@
 #include "config_store.h"
 #include "sensor.h"
 #include "relay.h"
+#include "relay_log.h"
 #include "scheduler.h"
 #include "network.h"
 #include <ESP8266WebServer.h>
+#include <time.h>
 
 WebServer webServer;
 
@@ -21,6 +23,9 @@ void WebServer::begin() {
     httpServer.on("/api/override", HTTP_POST, [this]() { handleApiOverride(); });
     httpServer.on("/api/config", HTTP_GET, [this]() { handleApiConfigGet(); });
     httpServer.on("/api/config", HTTP_POST, [this]() { handleApiConfigPost(); });
+    httpServer.on("/api/stats", HTTP_GET, [this]() { handleApiStats(); });
+    httpServer.on("/api/log", HTTP_GET, [this]() { handleApiLog(); });
+    httpServer.on("/api/log/plantuml", HTTP_GET, [this]() { handleApiLogPlantUML(); });
     httpServer.onNotFound([this]() { handleNotFound(); });
 
     httpServer.begin();
@@ -193,6 +198,140 @@ void WebServer::handleApiConfigPost() {
     }
 
     httpServer.send(400, "application/json", "{\"error\":\"invalid timezone\"}");
+}
+
+void WebServer::handleApiStats() {
+    uint32_t on_1h = relayLog.getOnSeconds(1);
+    uint32_t on_6h = relayLog.getOnSeconds(6);
+    uint32_t on_12h = relayLog.getOnSeconds(12);
+    uint32_t on_24h = relayLog.getOnSeconds(24);
+
+    char json[256];
+    snprintf(json, sizeof(json),
+        "{\"on_1h\":%u,\"on_6h\":%u,\"on_12h\":%u,\"on_24h\":%u,"
+        "\"on_1h_pct\":%.1f,\"on_6h_pct\":%.1f,\"on_12h_pct\":%.1f,\"on_24h_pct\":%.1f}",
+        on_1h, on_6h, on_12h, on_24h,
+        on_1h * 100.0 / 3600.0,
+        on_6h * 100.0 / 21600.0,
+        on_12h * 100.0 / 43200.0,
+        on_24h * 100.0 / 86400.0
+    );
+    httpServer.send(200, "application/json", json);
+}
+
+void WebServer::handleApiLog() {
+    int count = 100;  // Default
+    if (httpServer.hasArg("count")) {
+        count = httpServer.arg("count").toInt();
+        if (count > 1000) count = 1000;
+        if (count < 1) count = 1;
+    }
+
+    String json = "[";
+    uint16_t total = relayLog.getLogCount();
+    uint16_t start = (total > count) ? (total - count) : 0;
+    bool first = true;
+
+    for (uint16_t i = start; i < total; i++) {
+        RelayLogEntry entry;
+        if (relayLog.getLogEntry(i, entry)) {
+            if (!first) json += ",";
+            first = false;
+            char buf[64];
+            snprintf(buf, sizeof(buf), "{\"t\":%u,\"temp\":%.1f,\"s\":%d}",
+                     entry.timestamp,
+                     entry.temp_x10 / 10.0f,
+                     entry.state);
+            json += buf;
+        }
+    }
+    json += "]";
+    httpServer.send(200, "application/json", json);
+}
+
+// Helper to convert a byte to two hex chars
+static void byteToHex(uint8_t b, char* out) {
+    const char hex[] = "0123456789abcdef";
+    out[0] = hex[b >> 4];
+    out[1] = hex[b & 0x0f];
+}
+
+void WebServer::handleApiLogPlantUML() {
+    // Get configurable PlantUML server URL
+    String baseUrl = PLANTUML_DEFAULT_SERVER;
+    if (httpServer.hasArg("server")) {
+        baseUrl = httpServer.arg("server");
+    }
+
+    // Build PlantUML timing diagram source
+    String puml = "@startuml\n";
+    puml += "title Relay Activity Log\n";
+    puml += "analog \"Temp\" between 10 and 30 as T\n";
+    puml += "T ticks num on multiple 2\n";
+    puml += "binary \"Relay\" as R\n\n";
+
+    uint16_t total = relayLog.getLogCount();
+    uint16_t count = total > 100 ? 100 : total;  // Limit for URL length
+    uint16_t start = total > count ? total - count : 0;
+
+    for (uint16_t i = start; i < total; i++) {
+        RelayLogEntry entry;
+        if (relayLog.getLogEntry(i, entry)) {
+            // Format timestamp as HH:MM:SS
+            time_t ts = entry.timestamp;
+            struct tm* tm_info = localtime(&ts);
+            char timeStr[16];
+            snprintf(timeStr, sizeof(timeStr), "%02d:%02d:%02d",
+                     tm_info->tm_hour, tm_info->tm_min, tm_info->tm_sec);
+
+            puml += "@";
+            puml += timeStr;
+            puml += "\n";
+            puml += "T is ";
+            char tempStr[8];
+            snprintf(tempStr, sizeof(tempStr), "%.1f", entry.temp_x10 / 10.0f);
+            puml += tempStr;
+            puml += "\n";
+            puml += "R is ";
+            puml += entry.state ? "high" : "low";
+            puml += "\n\n";
+        }
+    }
+
+    puml += "@enduml";
+
+    // Build hex-encoded URL using ~h prefix
+    String hexEncoded = "";
+    for (size_t i = 0; i < puml.length(); i++) {
+        char hex[3];
+        byteToHex((uint8_t)puml[i], hex);
+        hex[2] = '\0';
+        hexEncoded += hex;
+    }
+
+    String imgUrl = baseUrl + "~h" + hexEncoded;
+
+    // Return HTML page with embedded image
+    String html = "<!DOCTYPE html><html><head>";
+    html += "<meta charset=\"UTF-8\">";
+    html += "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">";
+    html += "<title>Relay Timeline</title>";
+    html += "<style>body{font-family:sans-serif;margin:20px;background:#f5f5f5;}";
+    html += ".container{max-width:100%;overflow-x:auto;background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);}";
+    html += "h1{color:#333;margin-bottom:20px;}";
+    html += "img{max-width:100%;height:auto;}";
+    html += "pre{background:#f0f0f0;padding:10px;overflow-x:auto;font-size:12px;}</style>";
+    html += "</head><body>";
+    html += "<div class=\"container\">";
+    html += "<h1>Relay Activity Timeline</h1>";
+    html += "<p>Last " + String(count) + " events</p>";
+    html += "<img src=\"" + imgUrl + "\" alt=\"Timing Diagram\">";
+    html += "<h2>PlantUML Source</h2>";
+    html += "<pre>" + puml + "</pre>";
+    html += "<p><a href=\"/\">Back to Dashboard</a></p>";
+    html += "</div></body></html>";
+
+    httpServer.send(200, "text/html", html);
 }
 
 void WebServer::handleNotFound() {

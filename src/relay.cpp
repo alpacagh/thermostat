@@ -1,5 +1,7 @@
 #include "relay.h"
 #include "config.h"
+#include "relay_log.h"
+#include "sensor.h"
 
 RelayControl relayControl;
 
@@ -72,9 +74,18 @@ unsigned long RelayControl::getLastChangeTime() {
 }
 
 void RelayControl::setRelay(bool on) {
-    relay_on = on;
-    digitalWrite(PIN_RELAY, on ? HIGH : LOW);
-    last_change_time = millis();
+    if (on != relay_on) {  // Only log actual state changes
+        relay_on = on;
+        digitalWrite(PIN_RELAY, on ? HIGH : LOW);
+        last_change_time = millis();
+
+        // Log the relay state change with current temperature
+        relayLog.logEvent(on, tempSensor.getTemperature());
+    } else {
+        relay_on = on;
+        digitalWrite(PIN_RELAY, on ? HIGH : LOW);
+        last_change_time = millis();
+    }
 }
 
 bool RelayControl::canChangeState() {

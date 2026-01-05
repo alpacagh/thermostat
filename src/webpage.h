@@ -104,6 +104,31 @@ label{display:block;font-size:0.8rem;color:#666;margin-bottom:4px}
 </div>
 
 <div class="card">
+<h2>Statistics</h2>
+<div class="status-grid" style="grid-template-columns:1fr 1fr 1fr 1fr">
+<div class="status-item">
+<div class="status-value" id="stat-1h">--</div>
+<div class="status-label">Last 1h</div>
+</div>
+<div class="status-item">
+<div class="status-value" id="stat-6h">--</div>
+<div class="status-label">Last 6h</div>
+</div>
+<div class="status-item">
+<div class="status-value" id="stat-12h">--</div>
+<div class="status-label">Last 12h</div>
+</div>
+<div class="status-item">
+<div class="status-value" id="stat-24h">--</div>
+<div class="status-label">Last 24h</div>
+</div>
+</div>
+<div style="margin-top:12px;text-align:center">
+<a href="/api/log/plantuml" class="btn btn-primary" target="_blank">View Timeline</a>
+</div>
+</div>
+
+<div class="card">
 <h2>Settings</h2>
 <div class="form-row">
 <div><label>Timezone (UTC offset)</label><input type="number" id="timezone" min="-12" max="14"></div>
@@ -149,6 +174,23 @@ $('schedules').innerHTML=html;
 function updateConfig(){
 fetch('/api/config').then(r=>r.json()).then(d=>{
 $('timezone').value=d.timezone;
+}).catch(()=>{});
+}
+
+function formatDuration(secs){
+let m=Math.floor(secs/60);
+let h=Math.floor(m/60);
+m=m%60;
+if(h>0)return h+'h'+m+'m';
+return m+'m';
+}
+
+function updateStats(){
+fetch('/api/stats').then(r=>r.json()).then(d=>{
+$('stat-1h').textContent=formatDuration(d.on_1h);
+$('stat-6h').textContent=formatDuration(d.on_6h);
+$('stat-12h').textContent=formatDuration(d.on_12h);
+$('stat-24h').textContent=formatDuration(d.on_24h);
 }).catch(()=>{});
 }
 
@@ -215,7 +257,9 @@ fetch('/api/config',{method:'POST',body:JSON.stringify({timezone:tz})})
 updateStatus();
 updateSchedules();
 updateConfig();
+updateStats();
 setInterval(updateStatus,5000);
+setInterval(updateStats,30000);
 </script>
 </body>
 </html>
