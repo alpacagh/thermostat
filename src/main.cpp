@@ -16,6 +16,7 @@ static unsigned long last_schedule_check = 0;
 static unsigned long last_display_update = 0;
 static unsigned long last_relay_log_update = 0;
 static unsigned long last_relay_log_periodic = 0;
+static unsigned long last_heap_check = 0;
 
 void setup() {
     // Initialize EEPROM config
@@ -139,6 +140,16 @@ void loop() {
     if (now - last_relay_log_periodic >= RELAY_LOG_PERIODIC_INTERVAL) {
         last_relay_log_periodic = now;
         relayLog.logPeriodic(relayControl.isOn(), tempSensor.getTemperature());
+    }
+
+    // Monitor heap memory every 5 minutes
+    if (now - last_heap_check >= HEAP_CHECK_INTERVAL) {
+        last_heap_check = now;
+        uint32_t free_heap = ESP.getFreeHeap();
+        Serial.printf("Free heap: %u bytes\n", free_heap);
+        if (free_heap < 10000) {
+            Serial.println("WARNING: Low heap memory!");
+        }
     }
 
     // Handle network (UDP discovery, TCP commands)

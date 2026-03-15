@@ -20,8 +20,55 @@ void Network::begin() {
 void Network::loop() {
     handleTcpClients();
 
+    unsigned long now = millis();
+
+    // WiFi reconnection logic with exponential backoff
+    static unsigned long last_wifi_check = 0;
+    static unsigned long next_check_interval = WIFI_CHECK_INTERVAL;
+
+    if (now - last_wifi_check > next_check_interval) {
+        last_wifi_check = now;
+        if (!isWifiConnected()) {
+            Serial.println("WiFi disconnected, attempting reconnection...");
+            if (connectWifi(configStore.getWifiSsid(), configStore.getWifiPass())) {
+                Serial.println("WiFi reconnected successfully");
+                next_check_interval = WIFI_CHECK_INTERVAL;
+                reconnect_attempts = 0;
+
+                // Resync time after reconnection (periodic NTP sync will retry if this fails)
+                if (syncTime()) {
+                    Serial.println("Time synced after reconnection");
+                } else {
+                    Serial.println("Time sync failed after reconnection, will retry on next NTP interval");
+                }
+            } else {
+                reconnect_attempts++;
+                Serial.printf("WiFi reconnection failed, attempt %d\n", reconnect_attempts);
+
+                // Exponential backoff: 30s, 60s, 120s, 240s, 300s (max)
+                if (next_check_interval < WIFI_CHECK_INTERVAL_MAX) {
+                    next_check_interval = next_check_interval * 2;
+                    if (next_check_interval > WIFI_CHECK_INTERVAL_MAX) {
+                        next_check_interval = WIFI_CHECK_INTERVAL_MAX;
+                    }
+                }
+                Serial.printf("Next reconnection attempt in %ld seconds\n", next_check_interval / 1000);
+
+                // Reset reconnection attempts after many failures
+                if (reconnect_attempts > 10) {
+                    reconnect_attempts = 0;
+                    next_check_interval = WIFI_CHECK_INTERVAL;
+                    Serial.println("Resetting WiFi reconnection attempts");
+                }
+            }
+        } else {
+            // Reset to normal check interval when connected
+            next_check_interval = WIFI_CHECK_INTERVAL;
+        }
+    }
+
     // Periodic NTP sync
-    if (wifi_connected && (millis() - last_ntp_sync > NTP_SYNC_INTERVAL)) {
+    if (wifi_connected && (now - last_ntp_sync > NTP_SYNC_INTERVAL)) {
         syncTime();
     }
 }
@@ -30,12 +77,15 @@ bool Network::connectWifi(const char* ssid, const char* pass) {
     WiFi.begin(ssid, pass);
 
     int attempts = 0;
-    while (WiFi.status() != WL_CONNECTED && attempts < 30) {
+    while (WiFi.status() != WL_CONNECTED && attempts < 10) {
         delay(500);
         attempts++;
     }
 
     wifi_connected = (WiFi.status() == WL_CONNECTED);
+    if (wifi_connected) {
+        reconnect_attempts = 0;
+    }
     return wifi_connected;
 }
 

@@ -41,10 +41,12 @@ void WebServer::handleRoot() {
 }
 
 void WebServer::handleApiStatus() {
-    char json[256];
+    char json[384];
     snprintf(json, sizeof(json),
         "{\"temperature\":%.1f,\"humidity\":%.1f,\"relay\":%s,\"override\":\"%s\","
-        "\"schedule\":%d,\"valid\":%s,\"time\":\"%02d:%02d\"}",
+        "\"schedule\":%d,\"valid\":%s,\"time\":\"%02d:%02d\","
+        "\"wifi_connected\":%s,"
+        "\"reconnect_attempts\":%d,\"uptime_ms\":%lu,\"heap_free\":%u}",
         tempSensor.getTemperature(),
         tempSensor.getHumidity(),
         relayControl.isOn() ? "true" : "false",
@@ -53,7 +55,11 @@ void WebServer::handleApiStatus() {
         scheduler.getActiveScheduleIndex(),
         tempSensor.isValid() ? "true" : "false",
         network.getHour(),
-        network.getMinute()
+        network.getMinute(),
+        network.isWifiConnected() ? "true" : "false",
+        network.getReconnectAttempts(),
+        millis(),
+        ESP.getFreeHeap()
     );
     httpServer.send(200, "application/json", json);
 }

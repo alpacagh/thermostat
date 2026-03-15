@@ -25,6 +25,9 @@
 #define MIN_RELAY_CYCLE_MS      5000  // 5 seconds
 #define RELAY_LOG_UPDATE_INTERVAL   60000   // 1 minute - hourly stats update
 #define RELAY_LOG_PERIODIC_INTERVAL 600000  // 10 minutes - periodic log entry
+#define HEAP_CHECK_INTERVAL        300000  // 5 minutes - heap memory monitoring
+#define WIFI_CHECK_INTERVAL        30000   // 30 seconds - WiFi reconnection check
+#define WIFI_CHECK_INTERVAL_MAX    300000  // 5 minutes - max backoff for WiFi reconnection
 
 // Network ports
 #define TCP_SERVER_PORT     8266
