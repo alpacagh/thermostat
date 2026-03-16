@@ -33,7 +33,8 @@ void Display::showBootMessage(const char* message) {
 
 void Display::showStatus(float temp, float humidity, bool relay_on, bool overridden,
                          uint8_t hour, uint8_t min, float open_temp, float close_temp,
-                         bool wifi_connected, const char* ip_address, bool sensor_valid) {
+                         bool wifi_connected, const char* ip_address, bool sensor_valid,
+                         unsigned long override_remaining_sec) {
     if (!initialized) return;
 
     oled.clearDisplay();
@@ -77,18 +78,32 @@ void Display::showStatus(float temp, float humidity, bool relay_on, bool overrid
         oled.print("%");
     }
 
-    // Row 4: Temperature margins
+    // Row 4: Temperature margins or override countdown
     oled.setCursor(0, 36);
-    oled.print("Set: ");
-    if (open_temp > 0 || close_temp > 0) {
-        char margin_buf[16];
-        dtostrf(open_temp, 3, 1, margin_buf);
-        oled.print(margin_buf);
-        oled.print("-");
-        dtostrf(close_temp, 3, 1, margin_buf);
-        oled.print(margin_buf);
+    if (overridden) {
+        oled.print("OVR: ");
+        if (override_remaining_sec > 0) {
+            unsigned long h = override_remaining_sec / 3600;
+            unsigned long m = (override_remaining_sec % 3600) / 60;
+            unsigned long s = override_remaining_sec % 60;
+            char ovr_buf[16];
+            snprintf(ovr_buf, sizeof(ovr_buf), "%lu:%02lu:%02lu", h, m, s);
+            oled.print(ovr_buf);
+        } else {
+            oled.print("indefinite");
+        }
     } else {
-        oled.print("--");
+        oled.print("Set: ");
+        if (open_temp > 0 || close_temp > 0) {
+            char margin_buf[16];
+            dtostrf(open_temp, 3, 1, margin_buf);
+            oled.print(margin_buf);
+            oled.print("-");
+            dtostrf(close_temp, 3, 1, margin_buf);
+            oled.print(margin_buf);
+        } else {
+            oled.print("--");
+        }
     }
 
     // Row 5: Connection status

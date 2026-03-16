@@ -173,13 +173,14 @@ String Network::processCommand(const String& cmd) {
     }
 
     if (command.startsWith("STATUS")) {
-        char buf[128];
+        char buf[160];
         snprintf(buf, sizeof(buf),
-                 "OK temp=%.1f humidity=%.1f relay=%s override=%s schedule=%d",
+                 "OK temp=%.1f humidity=%.1f relay=%s override=%s override_remaining=%lu schedule=%d",
                  tempSensor.getTemperature(),
                  tempSensor.getHumidity(),
                  relayControl.isOn() ? "ON" : "OFF",
                  relayControl.isOverridden() ? "YES" : "NO",
+                 relayControl.getOverrideRemaining() / 1000,
                  scheduler.getActiveScheduleIndex());
         return String(buf);
     }
@@ -230,10 +231,33 @@ String Network::processCommand(const String& cmd) {
 
     if (command.startsWith("OVERRIDE")) {
         if (command.indexOf("ON") > 0) {
+            // Check for optional duration after "ON"
+            int pos = command.indexOf("ON") + 2;
+            String rest = cmd.substring(pos);
+            rest.trim();
+            if (rest.length() > 0) {
+                unsigned long dur = parseDurationMs(rest.c_str());
+                if (dur > 0) {
+                    relayControl.setOverride(OverrideState::FORCE_ON, dur);
+                    return "OK";
+                }
+                return "ERR invalid duration";
+            }
             relayControl.setOverride(OverrideState::FORCE_ON);
             return "OK";
         }
         if (command.indexOf("OFF") > 0) {
+            int pos = command.indexOf("OFF") + 3;
+            String rest = cmd.substring(pos);
+            rest.trim();
+            if (rest.length() > 0) {
+                unsigned long dur = parseDurationMs(rest.c_str());
+                if (dur > 0) {
+                    relayControl.setOverride(OverrideState::FORCE_OFF, dur);
+                    return "OK";
+                }
+                return "ERR invalid duration";
+            }
             relayControl.setOverride(OverrideState::FORCE_OFF);
             return "OK";
         }

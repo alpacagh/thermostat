@@ -162,7 +162,9 @@ end note
 
 ### Manual Override
 - Network command to force relay ON/OFF
-- Override persists until cancelled or schedule change
+- Optional timed duration in `[[hh:]mm[:ss]]` format (single value = minutes, two parts = hh:mm, three parts = hh:mm:ss)
+- Timed override auto-expires after the specified duration
+- Indefinite override (no duration) persists until manually cancelled
 
 ---
 
@@ -173,7 +175,7 @@ Show on screen:
 - Current temperature (°C)
 - Current humidity (%)
 - Current time (HH:MM)
-- Active temperature margins (open/close temps)
+- Active temperature margins (open/close temps), or override countdown when timed override is active
 - Connection status (WiFi connected/disconnected, IP address)
 
 ---
@@ -252,7 +254,8 @@ RESPONSE: OK [DATA]\n  or  ERR [MESSAGE]\n
 | `GET_SCHEDULES` | List all temperature_control_setups |
 | `SET_SCHEDULE idx time_from time_to open close` | Set schedule at index |
 | `DEL_SCHEDULE idx` | Delete schedule at index |
-| `OVERRIDE ON\|OFF\|CLEAR` | Manual relay override |
+| `OVERRIDE ON\|OFF [duration]` | Manual relay override (optional duration in `[[hh:]mm[:ss]]` format) |
+| `OVERRIDE CLEAR` | Cancel active override |
 | `GET_CONFIG` | Get current WiFi SSID, timezone, IP |
 
 ---
@@ -299,9 +302,12 @@ config {
 | `src/config_store.h/cpp` | EEPROM read/write |
 | `src/display.h/cpp` | OLED rendering |
 | `src/sensor.h/cpp` | AM2302 reading |
-| `src/relay.h/cpp` | Relay control with min cycle |
+| `src/relay.h/cpp` | Relay control with min cycle, timed override, duration parser |
 | `src/network.h/cpp` | WiFi, NTP, TCP server |
 | `src/scheduler.h/cpp` | Schedule matching logic |
+| `src/webserver.h/cpp` | HTTP REST API (port 80) |
+| `src/webpage.h` | Web dashboard (PROGMEM) |
+| `src/relay_log.h/cpp` | Relay state logging, hourly statistics |
 | `src/serial_config.h/cpp` | USB serial setup menu |
 | `platformio.ini` | PlatformIO project config |
 

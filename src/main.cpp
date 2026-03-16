@@ -126,7 +126,8 @@ void loop() {
             scheduler.getCloseTemp(),
             network.isWifiConnected(),
             network.getLocalIP().c_str(),
-            tempSensor.isValid()
+            tempSensor.isValid(),
+            relayControl.getOverrideRemaining() / 1000
         );
     }
 

@@ -5,7 +5,13 @@
       "Bash(pio run:*)",
       "Bash(python3 -m platformio:*)",
       "Bash(pip3 show:*)",
-      "Bash(pip3 install:*)"
+      "Bash(pip3 install:*)",
+      "Bash(grep -E \"\\\\.\\(h|cpp|js|html\\)$\")",
+      "Bash(pio test:*)",
+      "Bash(git add:*)",
+      "Bash(pio device:*)",
+      "Bash(nc -w2 192.168.1.17 8266)",
+      "Bash(nc -w3 192.168.1.17 8266)"
     ]
   }
 }

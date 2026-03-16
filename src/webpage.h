@@ -71,6 +71,9 @@ label{display:block;font-size:0.8rem;color:#666;margin-bottom:4px}
 
 <div class="card">
 <h2>Override</h2>
+<div class="form-row" style="margin-bottom:8px">
+<div><label>Duration (optional)</label><input type="text" id="override-dur" placeholder="mm or hh:mm" style="width:120px"></div>
+</div>
 <div class="override-btns">
 <button class="btn btn-success" onclick="setOverride('on')">Force ON</button>
 <button class="btn btn-danger" onclick="setOverride('off')">Force OFF</button>
@@ -136,6 +139,8 @@ label{display:block;font-size:0.8rem;color:#666;margin-bottom:4px}
 </div>
 </div>
 
+<p style="text-align:center;color:#aaa;font-size:0.75rem;margin-top:12px">Free heap: <span id="heap">--</span> bytes</p>
+
 <script>
 let schedules=[];
 function $(id){return document.getElementById(id)}
@@ -149,8 +154,16 @@ $('relay').className='status-value '+(d.relay?'relay-on':'relay-off');
 $('schedule').textContent=d.schedule>=0?'#'+d.schedule:'None';
 $('time').textContent=d.time;
 if(d.override!=='none'){
-$('relay').innerHTML+='<span class="override-badge override-'+d.override+'">'+d.override.toUpperCase()+'</span>';
+let label=d.override.toUpperCase();
+if(d.override_remaining>0){
+let s=d.override_remaining;
+let h=Math.floor(s/3600);s%=3600;
+let m=Math.floor(s/60);s%=60;
+label+=' '+(h>0?h+':':'')+(h>0?String(m).padStart(2,'0'):m)+':'+String(s).padStart(2,'0');
 }
+$('relay').innerHTML+='<span class="override-badge override-'+d.override+'">'+label+'</span>';
+}
+$('heap').textContent=d.heap_free;
 }).catch(()=>{});
 }
 
@@ -195,8 +208,11 @@ $('stat-24h').textContent=formatDuration(d.on_24h);
 }
 
 function setOverride(state){
-fetch('/api/override',{method:'POST',body:JSON.stringify({state:state})})
-.then(()=>updateStatus());
+let data={state:state};
+let dur=$('override-dur').value.trim();
+if(dur&&state!=='clear')data.duration=dur;
+fetch('/api/override',{method:'POST',body:JSON.stringify(data)})
+.then(()=>{$('override-dur').value='';updateStatus();});
 }
 
 function showAddSchedule(){

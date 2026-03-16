@@ -44,20 +44,19 @@ void WebServer::handleApiStatus() {
     char json[384];
     snprintf(json, sizeof(json),
         "{\"temperature\":%.1f,\"humidity\":%.1f,\"relay\":%s,\"override\":\"%s\","
+        "\"override_remaining\":%lu,"
         "\"schedule\":%d,\"valid\":%s,\"time\":\"%02d:%02d\","
-        "\"wifi_connected\":%s,"
-        "\"reconnect_attempts\":%d,\"uptime_ms\":%lu,\"heap_free\":%u}",
+        "\"uptime_ms\":%lu,\"heap_free\":%u}",
         tempSensor.getTemperature(),
         tempSensor.getHumidity(),
         relayControl.isOn() ? "true" : "false",
         relayControl.getOverride() == OverrideState::FORCE_ON ? "on" :
             (relayControl.getOverride() == OverrideState::FORCE_OFF ? "off" : "none"),
+        relayControl.getOverrideRemaining() / 1000,
         scheduler.getActiveScheduleIndex(),
         tempSensor.isValid() ? "true" : "false",
         network.getHour(),
         network.getMinute(),
-        network.isWifiConnected() ? "true" : "false",
-        network.getReconnectAttempts(),
         millis(),
         ESP.getFreeHeap()
     );
@@ -158,20 +157,43 @@ void WebServer::handleApiOverride() {
     }
 
     String body = httpServer.arg("plain");
-    body.toLowerCase();
+    String bodyLower = body;
+    bodyLower.toLowerCase();
 
-    if (body.indexOf("\"on\"") >= 0 || body.indexOf(":\"on\"") >= 0) {
-        relayControl.setOverride(OverrideState::FORCE_ON);
-        httpServer.send(200, "application/json", "{\"ok\":true}");
-    } else if (body.indexOf("\"off\"") >= 0 || body.indexOf(":\"off\"") >= 0) {
-        relayControl.setOverride(OverrideState::FORCE_OFF);
-        httpServer.send(200, "application/json", "{\"ok\":true}");
-    } else if (body.indexOf("\"clear\"") >= 0 || body.indexOf("\"none\"") >= 0) {
+    // Parse optional duration field from JSON: "duration":"30" or "duration":"1:30"
+    unsigned long duration_ms = 0;
+    int dpos = body.indexOf("\"duration\"");
+    if (dpos >= 0) {
+        int qstart = body.indexOf('"', dpos + 10);
+        if (qstart >= 0) {
+            int qend = body.indexOf('"', qstart + 1);
+            if (qend > qstart) {
+                String durStr = body.substring(qstart + 1, qend);
+                duration_ms = parseDurationMs(durStr.c_str());
+            }
+        }
+    }
+
+    OverrideState state;
+    if (bodyLower.indexOf("\"on\"") >= 0 || bodyLower.indexOf(":\"on\"") >= 0) {
+        state = OverrideState::FORCE_ON;
+    } else if (bodyLower.indexOf("\"off\"") >= 0 || bodyLower.indexOf(":\"off\"") >= 0) {
+        state = OverrideState::FORCE_OFF;
+    } else if (bodyLower.indexOf("\"clear\"") >= 0 || bodyLower.indexOf("\"none\"") >= 0) {
         relayControl.clearOverride();
         httpServer.send(200, "application/json", "{\"ok\":true}");
+        return;
     } else {
         httpServer.send(400, "application/json", "{\"error\":\"invalid state\"}");
+        return;
     }
+
+    if (duration_ms > 0) {
+        relayControl.setOverride(state, duration_ms);
+    } else {
+        relayControl.setOverride(state);
+    }
+    httpServer.send(200, "application/json", "{\"ok\":true}");
 }
 
 void WebServer::handleApiConfigGet() {
