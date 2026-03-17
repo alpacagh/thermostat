@@ -29,6 +29,9 @@
 #define WIFI_CHECK_INTERVAL        30000   // 30 seconds - WiFi reconnection check
 #define WIFI_CHECK_INTERVAL_MAX    300000  // 5 minutes - max backoff for WiFi reconnection
 
+// Safety limits
+#define UPPER_TEMP_LIMIT       30.0f   // Relay OFF at or above this temperature
+
 // Network ports
 #define TCP_SERVER_PORT     8266
 

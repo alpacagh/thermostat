@@ -7,9 +7,10 @@ ESP8266 (NodeMCU Amica) thermostat with WiFi connectivity, temperature-based rel
 The main loop (`src/main.cpp`) orchestrates all components via periodic polling using `millis()`. No RTOS — cooperative multitasking with `yield()` at end of each loop iteration.
 
 **Priority hierarchy for relay control:**
-1. Override (timed or indefinite) — bypasses all logic
-2. Fail-safe — relay OFF if sensor invalid or no active schedule
-3. Hysteresis control — based on temperature thresholds from active schedule
+1. Upper temperature limit — relay OFF if temperature >= 30°C (`UPPER_TEMP_LIMIT`), cannot be bypassed
+2. Override (timed or indefinite) — bypasses schedule and hysteresis logic
+3. Fail-safe — relay OFF if sensor invalid or no active schedule
+4. Hysteresis control — based on temperature thresholds from active schedule
 
 ## Components & Files
 
@@ -60,7 +61,7 @@ Pattern: `{ printf "COMMAND\n"; sleep 1; } | nc -w3 <DEVICE_IP> 8266`
 
 # Get status
 { printf "STATUS\n"; sleep 1; } | nc -w3 192.168.1.17 8266
-# → OK temp=20.9 humidity=38.0 relay=OFF override=NO override_remaining=0 schedule=0
+# → OK temp=20.9 humidity=38.0 relay=OFF override=NO override_remaining=0 upper_limit=NO schedule=0
 
 # Override relay (indefinite)
 { printf "OVERRIDE ON\n"; sleep 1; } | nc -w3 192.168.1.17 8266

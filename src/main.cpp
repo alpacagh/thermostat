@@ -127,7 +127,8 @@ void loop() {
             network.isWifiConnected(),
             network.getLocalIP().c_str(),
             tempSensor.isValid(),
-            relayControl.getOverrideRemaining() / 1000
+            relayControl.getOverrideRemaining() / 1000,
+            relayControl.isUpperLimitActive()
         );
     }
 

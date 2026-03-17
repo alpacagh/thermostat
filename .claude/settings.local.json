@@ -11,7 +11,8 @@
       "Bash(git add:*)",
       "Bash(pio device:*)",
       "Bash(nc -w2 192.168.1.17 8266)",
-      "Bash(nc -w3 192.168.1.17 8266)"
+      "Bash(nc -w3 192.168.1.17 8266)",
+      "Read(//dev/**)"
     ]
   }
 }

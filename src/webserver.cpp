@@ -41,10 +41,10 @@ void WebServer::handleRoot() {
 }
 
 void WebServer::handleApiStatus() {
-    char json[384];
+    char json[448];
     snprintf(json, sizeof(json),
         "{\"temperature\":%.1f,\"humidity\":%.1f,\"relay\":%s,\"override\":\"%s\","
-        "\"override_remaining\":%lu,"
+        "\"override_remaining\":%lu,\"upper_limit\":%s,"
         "\"schedule\":%d,\"valid\":%s,\"time\":\"%02d:%02d\","
         "\"uptime_ms\":%lu,\"heap_free\":%u}",
         tempSensor.getTemperature(),
@@ -53,6 +53,7 @@ void WebServer::handleApiStatus() {
         relayControl.getOverride() == OverrideState::FORCE_ON ? "on" :
             (relayControl.getOverride() == OverrideState::FORCE_OFF ? "off" : "none"),
         relayControl.getOverrideRemaining() / 1000,
+        relayControl.isUpperLimitActive() ? "true" : "false",
         scheduler.getActiveScheduleIndex(),
         tempSensor.isValid() ? "true" : "false",
         network.getHour(),

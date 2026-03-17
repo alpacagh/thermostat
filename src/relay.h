@@ -22,6 +22,7 @@ public:
 
     bool isOn();
     bool isOverridden();
+    bool isUpperLimitActive();
     unsigned long getLastChangeTime();
 
 private:
@@ -30,6 +31,7 @@ private:
     unsigned long last_change_time = 0;
     unsigned long override_start = 0;
     unsigned long override_duration = 0;  // 0 = indefinite
+    bool upper_limit_active = false;
 
     void setRelay(bool on);
     bool canChangeState();

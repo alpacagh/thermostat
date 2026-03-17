@@ -17,7 +17,14 @@ void RelayControl::update(float temperature, float open_temp, float close_temp,
         clearOverride();
     }
 
-    // Handle override first
+    // Safety: hard upper temperature limit — overrides everything
+    upper_limit_active = (sensor_valid && temperature >= UPPER_TEMP_LIMIT);
+    if (upper_limit_active) {
+        if (relay_on && canChangeState()) { setRelay(false); }
+        return;
+    }
+
+    // Handle override
     if (override_state == OverrideState::FORCE_ON) {
         if (!relay_on && canChangeState()) {
             setRelay(true);
@@ -89,6 +96,10 @@ bool RelayControl::isOn() {
 
 bool RelayControl::isOverridden() {
     return override_state != OverrideState::NONE;
+}
+
+bool RelayControl::isUpperLimitActive() {
+    return upper_limit_active;
 }
 
 unsigned long RelayControl::getLastChangeTime() {

@@ -20,6 +20,7 @@
 - Outside configured windows: relay OFF
 
 ### Safety Features
+- **Upper temperature limit**: relay OFF when temperature >= 30°C (`UPPER_TEMP_LIMIT`), overrides everything including manual overrides
 - **Minimum cycle time**: 2 minutes between relay state changes
 - **Sensor failure**: relay OFF (fail-safe)
 - **No matching schedule**: relay OFF
@@ -250,7 +251,7 @@ RESPONSE: OK [DATA]\n  or  ERR [MESSAGE]\n
 ### Commands
 | Command | Description |
 |---------|-------------|
-| `STATUS` | Get all state (temp, humidity, relay, time, etc.) |
+| `STATUS` | Get all state (temp, humidity, relay, override, upper_limit, schedule, etc.) |
 | `GET_SCHEDULES` | List all temperature_control_setups |
 | `SET_SCHEDULE idx time_from time_to open close` | Set schedule at index |
 | `DEL_SCHEDULE idx` | Delete schedule at index |

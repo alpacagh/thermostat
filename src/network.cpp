@@ -173,14 +173,15 @@ String Network::processCommand(const String& cmd) {
     }
 
     if (command.startsWith("STATUS")) {
-        char buf[160];
+        char buf[192];
         snprintf(buf, sizeof(buf),
-                 "OK temp=%.1f humidity=%.1f relay=%s override=%s override_remaining=%lu schedule=%d",
+                 "OK temp=%.1f humidity=%.1f relay=%s override=%s override_remaining=%lu upper_limit=%s schedule=%d",
                  tempSensor.getTemperature(),
                  tempSensor.getHumidity(),
                  relayControl.isOn() ? "ON" : "OFF",
                  relayControl.isOverridden() ? "YES" : "NO",
                  relayControl.getOverrideRemaining() / 1000,
+                 relayControl.isUpperLimitActive() ? "YES" : "NO",
                  scheduler.getActiveScheduleIndex());
         return String(buf);
     }

@@ -25,6 +25,7 @@ h2{font-size:1.1rem;margin:16px 0 8px;color:#555}
 .override-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.75rem;margin-left:8px}
 .override-on{background:#22c55e;color:#fff}
 .override-off{background:#ef4444;color:#fff}
+.upper-limit{background:#f59e0b;color:#fff}
 .btn{display:inline-block;padding:10px 16px;border:none;border-radius:6px;font-size:0.9rem;cursor:pointer;margin:4px}
 .btn-primary{background:#3b82f6;color:#fff}
 .btn-success{background:#22c55e;color:#fff}
@@ -153,7 +154,9 @@ $('relay').textContent=d.relay?'ON':'OFF';
 $('relay').className='status-value '+(d.relay?'relay-on':'relay-off');
 $('schedule').textContent=d.schedule>=0?'#'+d.schedule:'None';
 $('time').textContent=d.time;
-if(d.override!=='none'){
+if(d.upper_limit){
+$('relay').innerHTML+='<span class="override-badge upper-limit">UPPER LIMIT</span>';
+}else if(d.override!=='none'){
 let label=d.override.toUpperCase();
 if(d.override_remaining>0){
 let s=d.override_remaining;

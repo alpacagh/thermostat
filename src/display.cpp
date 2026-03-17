@@ -34,7 +34,7 @@ void Display::showBootMessage(const char* message) {
 void Display::showStatus(float temp, float humidity, bool relay_on, bool overridden,
                          uint8_t hour, uint8_t min, float open_temp, float close_temp,
                          bool wifi_connected, const char* ip_address, bool sensor_valid,
-                         unsigned long override_remaining_sec) {
+                         unsigned long override_remaining_sec, bool upper_limit) {
     if (!initialized) return;
 
     oled.clearDisplay();
@@ -47,7 +47,9 @@ void Display::showStatus(float temp, float humidity, bool relay_on, bool overrid
     oled.print(time_buf);
 
     oled.setCursor(48, 0);
-    if (relay_on) {
+    if (upper_limit) {
+        oled.print("LIMIT 30C");
+    } else if (relay_on) {
         oled.print("HEAT ON");
         if (overridden) oled.print("*");
     } else {
