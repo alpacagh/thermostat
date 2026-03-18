@@ -26,6 +26,7 @@ private:
     bool wifi_connected = false;
     int8_t timezone_offset = 0;
     unsigned long last_ntp_sync = 0;
+    unsigned long last_dhcp_renew = 0;
     int reconnect_attempts = 0;
 
     void handleTcpClients();

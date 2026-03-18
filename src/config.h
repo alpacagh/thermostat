@@ -28,6 +28,8 @@
 #define HEAP_CHECK_INTERVAL        300000  // 5 minutes - heap memory monitoring
 #define WIFI_CHECK_INTERVAL        30000   // 30 seconds - WiFi reconnection check
 #define WIFI_CHECK_INTERVAL_MAX    300000  // 5 minutes - max backoff for WiFi reconnection
+// attempt to workaround my router problem with lan access
+#define DHCP_RENEW_INTERVAL        180000 // 3 minutes - periodic DHCP lease renewal
 
 // Safety limits
 #define UPPER_TEMP_LIMIT       30.0f   // Relay OFF at or above this temperature

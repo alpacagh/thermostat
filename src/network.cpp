@@ -8,6 +8,11 @@
 #include <ESP8266WiFi.h>
 #include <time.h>
 
+extern "C" {
+    #include <lwip/dhcp.h>
+    struct netif* eagle_lwip_getif(int netif_index);
+}
+
 Network network;
 
 static WiFiServer tcpServer(TCP_SERVER_PORT);
@@ -70,6 +75,16 @@ void Network::loop() {
     // Periodic NTP sync
     if (wifi_connected && (now - last_ntp_sync > NTP_SYNC_INTERVAL)) {
         syncTime();
+    }
+
+    // Periodic DHCP lease renewal
+    if (wifi_connected && (now - last_dhcp_renew > DHCP_RENEW_INTERVAL)) {
+        last_dhcp_renew = now;
+        struct netif* nif = eagle_lwip_getif(0);
+        if (nif && netif_dhcp_data(nif)) {
+            dhcp_renew(nif);
+            Serial.println("DHCP lease renewed");
+        }
     }
 }
 
