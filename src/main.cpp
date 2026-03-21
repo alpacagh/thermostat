@@ -9,6 +9,7 @@
 #include "scheduler.h"
 #include "serial_config.h"
 #include "thermo_webserver.h"
+#include "ble_command.h"
 
 // Timing
 static unsigned long last_sensor_read = 0;
@@ -49,6 +50,9 @@ void setup() {
 
     // Initialize web server
     webServer.begin();
+
+    // Initialize BLE command server
+    bleCommand.begin();
 
     // Connect to WiFi
     if (configStore.hasWifiCredentials()) {
@@ -159,6 +163,9 @@ void loop() {
 
     // Handle web server
     webServer.loop();
+
+    // Handle BLE commands
+    bleCommand.loop();
 
     yield();
 }

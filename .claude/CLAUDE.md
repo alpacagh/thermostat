@@ -27,6 +27,7 @@ The main loop (`src/main.cpp`) orchestrates all components via periodic polling 
 | **Web Server** | `src/webserver.h/cpp` | HTTP REST API on port 80 |
 | **Web UI** | `src/webpage.h` | Single-page HTML/JS dashboard stored in PROGMEM |
 | **Relay Log** | `src/relay_log.h/cpp` | LittleFS relay state logging with hourly statistics |
+| **BLE Command** | `src/ble_command.h/cpp` | BLE command server (NUS profile) for status, WiFi/timezone config, WiFi reset |
 | **Serial Config** | `src/serial_config.h/cpp` | Serial-based initial WiFi/timezone setup (hold during boot) |
 
 ## Build & Flash
@@ -108,6 +109,28 @@ curl -s -X POST http://192.168.1.17/api/schedule \
 
 # Get relay statistics
 curl -s http://192.168.1.17/api/stats
+```
+
+### On-Device Testing via BLE
+
+Use nRF Connect or Serial Bluetooth Terminal app. Device advertises as "Thermostat" (NUS profile).
+
+```
+# Get status
+STATUS
+# → OK relay=OFF override=NO override_remaining=0 schedule=0 wifi=192.168.1.17 http=http://192.168.1.17/
+
+# Configure WiFi
+SET_WIFI MySSID MyPassword
+# → OK wifi_set
+
+# Configure timezone
+SET_TIMEZONE 3
+# → OK tz=3
+
+# Reset WiFi connection (disconnect + reconnect)
+WIFI_RESET
+# → OK wifi_resetting
 ```
 
 ### Web UI

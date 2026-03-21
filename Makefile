@@ -12,15 +12,15 @@ DEVICE_IP ?=
 
 ## Build firmware
 build:
-	pio run
+	pio run -e esp32c3
 
 ## Upload firmware to device
 upload:
-	pio run -t upload
+	pio run -t upload -e esp32c3
 
 ## Connect to serial TTY (LF line endings)
 monitor:
-	pio device monitor --eol LF
+	pio device monitor --eol LF -e esp32c3
 
 ## Alternative: minicom with LF mode
 minicom:

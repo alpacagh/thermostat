@@ -1,12 +1,25 @@
 #include "serial_config.h"
 #include "config_store.h"
+#include <WiFi.h>
 
 SerialSetup serialSetup;
 
 void SerialSetup::begin() {
     Serial.begin(115200);
+    delay(2000);  // Wait for USB CDC to enumerate
     Serial.println();
     Serial.println("Thermostat v1.0");
+
+    if (!configStore.hasWifiCredentials()) {
+        WiFi.mode(WIFI_OFF);  // Prevent ESP-IDF auto-connect with stale NVS data
+        Serial.println("No WiFi credentials configured.");
+        Serial.println("Entering config mode (also available via BLE).");
+        config_mode = true;
+        Serial.println("\n=== Configuration Mode ===");
+        showMenu();
+        return;
+    }
+
     Serial.println("Press 'c' within 3 seconds to enter config mode...");
 
     unsigned long start = millis();

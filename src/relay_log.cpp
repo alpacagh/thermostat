@@ -5,7 +5,7 @@
 RelayLog relayLog;
 
 void RelayLog::begin() {
-    if (!LittleFS.begin()) {
+    if (!LittleFS.begin(true)) {
         Serial.println("LittleFS mount failed");
         return;
     }

@@ -203,6 +203,12 @@ Show on screen:
 - Simple request/response format
 - Commands detailed in section 6
 
+### BLE Command Server
+- Text-based protocol over Bluetooth Low Energy (NUS profile)
+- Device advertises as "Thermostat"
+- Supports status queries, WiFi/timezone configuration, WiFi reset
+- Commands detailed in section 6b
+
 ---
 
 ## 4. Configuration
@@ -211,6 +217,13 @@ Show on screen:
 - Configure WiFi SSID and password
 - Configure timezone
 - Interactive text menu over serial
+
+### Wireless Setup (BLE)
+- Configure WiFi SSID and password
+- Configure timezone
+- Reset WiFi connection
+- Query device status (relay state, WiFi address)
+- No pairing required
 
 ### Network Setup (TCP Commands)
 - Read all state data
@@ -261,22 +274,48 @@ RESPONSE: OK [DATA]\n  or  ERR [MESSAGE]\n
 
 ---
 
+## 6b. BLE Command Protocol
+
+### Transport
+- Nordic UART Service (NUS) over BLE
+- Service UUID: `6E400001-B5A3-F393-E0A9-E50E24DCCA9E`
+- RX Characteristic (write): `6E400002-...` — phone sends commands
+- TX Characteristic (notify): `6E400003-...` — device sends responses
+- Compatible with nRF Connect, Serial Bluetooth Terminal, LightBlue
+
+### Format
+```
+REQUEST:  COMMAND [ARGS]
+RESPONSE: OK [DATA]  or  ERR [MESSAGE]
+```
+
+### Commands
+| Command | Description |
+|---------|-------------|
+| `STATUS` | Get relay state, override, schedule, WiFi IP, HTTP URL |
+| `SET_WIFI <ssid> <password>` | Set WiFi credentials (saved to EEPROM, does not auto-reconnect) |
+| `SET_TIMEZONE <offset>` | Set UTC offset (-12 to +14, saved to EEPROM) |
+| `WIFI_RESET` | Disconnect and reconnect WiFi with stored credentials |
+
+---
+
 ## 7. Power-On Sequence
 
 1. Initialize display, show "Booting..."
 2. Load WiFi credentials from EEPROM
-3. Display "Connecting WiFi..."
-4. Connect to WiFi AP (retry with backoff)
-5. Display "Syncing time..."
-6. Sync time via NTP
-7. Load temperature_control_setups from EEPROM
-8. Determine current active schedule
-9. Start main loop:
-   - Schedule refresh (60s interval)
-   - Temperature reading (2s interval)
-   - Relay control logic
-   - Display update
-   - Network request handling
+3. Initialize BLE command server (starts advertising as "Thermostat")
+4. Display "Connecting WiFi..."
+5. Connect to WiFi AP (retry with backoff)
+6. Display "Syncing time..."
+7. Sync time via NTP
+8. Load temperature_control_setups from EEPROM
+9. Determine current active schedule
+10. Start main loop:
+    - Schedule refresh (60s interval)
+    - Temperature reading (2s interval)
+    - Relay control logic
+    - Display update
+    - Network request handling (TCP, HTTP, BLE)
 
 ---
 
@@ -309,6 +348,7 @@ config {
 | `src/webserver.h/cpp` | HTTP REST API (port 80) |
 | `src/webpage.h` | Web dashboard (PROGMEM) |
 | `src/relay_log.h/cpp` | Relay state logging, hourly statistics |
+| `src/ble_command.h/cpp` | BLE command server (NUS profile) |
 | `src/serial_config.h/cpp` | USB serial setup menu |
 | `platformio.ini` | PlatformIO project config |
 
@@ -322,5 +362,5 @@ config {
 - `Adafruit_SSD1306` + `Adafruit_GFX` - OLED display
 - `Preferences` - Persistent storage
 - `LittleFS` - File system for relay logs
-- `NimBLE` or `BLE` - Bluetooth Low Energy
+- `NimBLE-Arduino` - Bluetooth Low Energy (NUS command server)
 - `time.h` - Time sync

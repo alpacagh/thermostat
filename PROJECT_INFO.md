@@ -28,6 +28,11 @@
 ## Purpose
 Create a room thermostat system that automatically controls a heater relay to maintain a set air temperature.
 
+## Interfaces
+- **WiFi**: Web dashboard (port 80), TCP commands (port 8266)
+- **BLE**: Text command server (NUS profile) — device status, WiFi/timezone config, WiFi reset
+- **Serial**: USB configuration menu (hold 'c' during boot)
+
 ## Deliverables
 1. **Wiring diagram** - See [WIRING.md](WIRING.md)
 2. **Firmware requirements** - See [REQUIREMENTS.md](REQUIREMENTS.md)

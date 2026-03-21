@@ -9,6 +9,8 @@ public:
     void loop();
 
     bool connectWifi(const char* ssid, const char* pass);
+    void disconnectWifi();
+    bool reconnectWifi();
     bool isWifiConnected();
     String getLocalIP();
 

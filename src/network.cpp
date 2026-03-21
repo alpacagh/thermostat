@@ -97,8 +97,42 @@ bool Network::connectWifi(const char* ssid, const char* pass) {
     wifi_connected = (WiFi.status() == WL_CONNECTED);
     if (wifi_connected) {
         reconnect_attempts = 0;
+    } else {
+        wl_status_t status = WiFi.status();
+        const char* reason;
+        switch (status) {
+            case WL_NO_SSID_AVAIL:  reason = "SSID not found"; break;
+            case WL_CONNECT_FAILED: reason = "auth failed (wrong password?)"; break;
+            case WL_DISCONNECTED:   reason = "disconnected (timeout)"; break;
+            case WL_IDLE_STATUS:    reason = "idle"; break;
+            default:                reason = "unknown"; break;
+        }
+        Serial.printf("WiFi failed: status=%d (%s), SSID=\"%s\", pass_len=%d, attempts=%d\n",
+                       status, reason, ssid, (int)strlen(pass), attempts);
     }
     return wifi_connected;
+}
+
+void Network::disconnectWifi() {
+    WiFi.disconnect(true);
+    wifi_connected = false;
+    Serial.println("WiFi disconnected");
+}
+
+bool Network::reconnectWifi() {
+    disconnectWifi();
+    delay(500);
+    if (configStore.hasWifiCredentials()) {
+        bool ok = connectWifi(configStore.getWifiSsid(), configStore.getWifiPass());
+        if (ok) {
+            Serial.print("WiFi reconnected: ");
+            Serial.println(getLocalIP());
+        } else {
+            Serial.println("WiFi reconnection failed");
+        }
+        return ok;
+    }
+    return false;
 }
 
 bool Network::isWifiConnected() {
