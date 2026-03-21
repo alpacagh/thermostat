@@ -3,11 +3,11 @@
 
 #include <Arduino.h>
 
-// Pin definitions (NodeMCU Amica)
-#define PIN_OLED_SCL    D1  // GPIO5
-#define PIN_OLED_SDA    D2  // GPIO4
-#define PIN_DHT         D5  // GPIO14
-#define PIN_RELAY       D6  // GPIO12
+// Pin definitions (ESP32-C3 nano)
+#define PIN_OLED_SCL    9   // GPIO9
+#define PIN_OLED_SDA    8   // GPIO8
+#define PIN_DHT         10  // GPIO10
+#define PIN_RELAY       7   // GPIO7
 
 // DHT sensor type
 #define DHT_TYPE        DHT22

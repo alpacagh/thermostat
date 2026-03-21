@@ -5,13 +5,9 @@
 #include "relay.h"
 #include "relay_log.h"
 #include "scheduler.h"
-#include <ESP8266WiFi.h>
+#include <WiFi.h>
 #include <time.h>
-
-extern "C" {
-    #include <lwip/dhcp.h>
-    struct netif* eagle_lwip_getif(int netif_index);
-}
+#include <esp_netif.h>
 
 Network network;
 
@@ -80,9 +76,10 @@ void Network::loop() {
     // Periodic DHCP lease renewal
     if (wifi_connected && (now - last_dhcp_renew > DHCP_RENEW_INTERVAL)) {
         last_dhcp_renew = now;
-        struct netif* nif = eagle_lwip_getif(0);
-        if (nif && netif_dhcp_data(nif)) {
-            dhcp_renew(nif);
+        esp_netif_t* netif = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+        if (netif) {
+            esp_netif_dhcpc_stop(netif);
+            esp_netif_dhcpc_start(netif);
             Serial.println("DHCP lease renewed");
         }
     }

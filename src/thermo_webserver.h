@@ -1,9 +1,9 @@
-#ifndef WEBSERVER_H
-#define WEBSERVER_H
+#ifndef THERMO_WEBSERVER_H
+#define THERMO_WEBSERVER_H
 
 #include <Arduino.h>
 
-class WebServer {
+class ThermoWebServer {
 public:
     void begin();
     void loop();
@@ -23,6 +23,6 @@ private:
     void handleNotFound();
 };
 
-extern WebServer webServer;
+extern ThermoWebServer webServer;
 
 #endif

@@ -14,7 +14,8 @@
       "Bash(nc -w3 192.168.1.17 8266)",
       "Read(//dev/**)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:arduino-esp8266.readthedocs.io)"
+      "WebFetch(domain:arduino-esp8266.readthedocs.io)",
+      "mcp__plugin_telegram_telegram__reply"
     ]
   }
 }

@@ -1,4 +1,4 @@
-#include "webserver.h"
+#include "thermo_webserver.h"
 #include "webpage.h"
 #include "config.h"
 #include "config_store.h"
@@ -7,14 +7,14 @@
 #include "relay_log.h"
 #include "scheduler.h"
 #include "network.h"
-#include <ESP8266WebServer.h>
+#include <WebServer.h>
 #include <time.h>
 
-WebServer webServer;
+ThermoWebServer webServer;
 
-static ESP8266WebServer httpServer(80);
+static WebServer httpServer(80);
 
-void WebServer::begin() {
+void ThermoWebServer::begin() {
     httpServer.on("/", HTTP_GET, [this]() { handleRoot(); });
     httpServer.on("/api/status", HTTP_GET, [this]() { handleApiStatus(); });
     httpServer.on("/api/schedules", HTTP_GET, [this]() { handleApiSchedules(); });
@@ -32,15 +32,15 @@ void WebServer::begin() {
     Serial.println("HTTP server started on port 80");
 }
 
-void WebServer::loop() {
+void ThermoWebServer::loop() {
     httpServer.handleClient();
 }
 
-void WebServer::handleRoot() {
-    httpServer.send_P(200, "text/html", WEBPAGE_HTML);
+void ThermoWebServer::handleRoot() {
+    httpServer.send(200, "text/html", WEBPAGE_HTML);
 }
 
-void WebServer::handleApiStatus() {
+void ThermoWebServer::handleApiStatus() {
     char json[448];
     snprintf(json, sizeof(json),
         "{\"temperature\":%.1f,\"humidity\":%.1f,\"relay\":%s,\"override\":\"%s\","
@@ -64,7 +64,7 @@ void WebServer::handleApiStatus() {
     httpServer.send(200, "application/json", json);
 }
 
-void WebServer::handleApiSchedules() {
+void ThermoWebServer::handleApiSchedules() {
     String json = "[";
     bool first = true;
     for (int i = 0; i < MAX_SCHEDULES; i++) {
@@ -86,7 +86,7 @@ void WebServer::handleApiSchedules() {
     httpServer.send(200, "application/json", json);
 }
 
-void WebServer::handleApiSchedulePost() {
+void ThermoWebServer::handleApiSchedulePost() {
     if (!httpServer.hasArg("plain")) {
         httpServer.send(400, "application/json", "{\"error\":\"no body\"}");
         return;
@@ -137,7 +137,7 @@ void WebServer::handleApiSchedulePost() {
     }
 }
 
-void WebServer::handleApiScheduleDelete() {
+void ThermoWebServer::handleApiScheduleDelete() {
     if (!httpServer.hasArg("index")) {
         httpServer.send(400, "application/json", "{\"error\":\"missing index\"}");
         return;
@@ -151,7 +151,7 @@ void WebServer::handleApiScheduleDelete() {
     }
 }
 
-void WebServer::handleApiOverride() {
+void ThermoWebServer::handleApiOverride() {
     if (!httpServer.hasArg("plain")) {
         httpServer.send(400, "application/json", "{\"error\":\"no body\"}");
         return;
@@ -197,7 +197,7 @@ void WebServer::handleApiOverride() {
     httpServer.send(200, "application/json", "{\"ok\":true}");
 }
 
-void WebServer::handleApiConfigGet() {
+void ThermoWebServer::handleApiConfigGet() {
     char json[128];
     snprintf(json, sizeof(json),
         "{\"timezone\":%d,\"ip\":\"%s\"}",
@@ -207,7 +207,7 @@ void WebServer::handleApiConfigGet() {
     httpServer.send(200, "application/json", json);
 }
 
-void WebServer::handleApiConfigPost() {
+void ThermoWebServer::handleApiConfigPost() {
     if (!httpServer.hasArg("plain")) {
         httpServer.send(400, "application/json", "{\"error\":\"no body\"}");
         return;
@@ -229,7 +229,7 @@ void WebServer::handleApiConfigPost() {
     httpServer.send(400, "application/json", "{\"error\":\"invalid timezone\"}");
 }
 
-void WebServer::handleApiStats() {
+void ThermoWebServer::handleApiStats() {
     uint32_t on_1h = relayLog.getOnSeconds(1);
     uint32_t on_6h = relayLog.getOnSeconds(6);
     uint32_t on_12h = relayLog.getOnSeconds(12);
@@ -248,7 +248,7 @@ void WebServer::handleApiStats() {
     httpServer.send(200, "application/json", json);
 }
 
-void WebServer::handleApiLog() {
+void ThermoWebServer::handleApiLog() {
     int count = 100;  // Default
     if (httpServer.hasArg("count")) {
         count = httpServer.arg("count").toInt();
@@ -285,7 +285,7 @@ static void byteToHex(uint8_t b, char* out) {
     out[1] = hex[b & 0x0f];
 }
 
-void WebServer::handleApiLogPlantUML() {
+void ThermoWebServer::handleApiLogPlantUML() {
     // Get configurable PlantUML server URL
     String baseUrl = PLANTUML_DEFAULT_SERVER;
     if (httpServer.hasArg("server")) {
@@ -363,6 +363,6 @@ void WebServer::handleApiLogPlantUML() {
     httpServer.send(200, "text/html", html);
 }
 
-void WebServer::handleNotFound() {
+void ThermoWebServer::handleNotFound() {
     httpServer.send(404, "text/plain", "Not Found");
 }

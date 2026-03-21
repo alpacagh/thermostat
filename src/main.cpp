@@ -8,7 +8,7 @@
 #include "network.h"
 #include "scheduler.h"
 #include "serial_config.h"
-#include "webserver.h"
+#include "thermo_webserver.h"
 
 // Timing
 static unsigned long last_sensor_read = 0;
