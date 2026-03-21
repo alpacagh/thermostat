@@ -1,10 +1,10 @@
 # Thermostat Project
 
-ESP8266 (NodeMCU Amica) thermostat with WiFi connectivity, temperature-based relay control, OLED display, web dashboard, and TCP command interface. Built with PlatformIO + Arduino framework.
+ESP32-C3 nano thermostat with WiFi + BLE connectivity, temperature-based relay control, OLED display, web dashboard, and TCP command interface. Built with PlatformIO + Arduino framework.
 
 ## Architecture
 
-The main loop (`src/main.cpp`) orchestrates all components via periodic polling using `millis()`. No RTOS — cooperative multitasking with `yield()` at end of each loop iteration.
+The main loop (`src/main.cpp`) orchestrates all components via periodic polling using `millis()`. ESP32-C3 runs FreeRTOS but the firmware uses a single-task Arduino loop model.
 
 **Priority hierarchy for relay control:**
 1. Upper temperature limit — relay OFF if temperature >= 30°C (`UPPER_TEMP_LIMIT`), cannot be bypassed
@@ -18,7 +18,7 @@ The main loop (`src/main.cpp`) orchestrates all components via periodic polling 
 |-----------|-------|-------------|
 | **Main loop** | `src/main.cpp` | Orchestrates all components, timing intervals |
 | **Config** | `src/config.h` | Pin definitions, timing constants (`SENSOR_READ_INTERVAL`, etc.) |
-| **Config Store** | `src/config_store.h/cpp` | EEPROM persistence for WiFi credentials, schedules, timezone |
+| **Config Store** | `src/config_store.h/cpp` | Persistent storage for WiFi credentials, schedules, timezone |
 | **Sensor** | `src/sensor.h/cpp` | DHT22 temperature/humidity reading |
 | **Relay** | `src/relay.h/cpp` | Relay control with hysteresis, override (timed/indefinite), `parseDurationMs()` duration parser |
 | **Scheduler** | `src/scheduler.h/cpp` | Time-based schedule evaluation (up to 8 slots) |
@@ -32,8 +32,8 @@ The main loop (`src/main.cpp`) orchestrates all components via periodic polling 
 ## Build & Flash
 
 ```bash
-pio run                  # Build for ESP8266
-pio run -t upload        # Build and flash (auto-detects USB serial)
+pio run -e esp32c3       # Build for ESP32-C3
+pio run -e esp32c3 -t upload  # Build and flash (auto-detects USB serial)
 pio test -e native       # Run unit tests on host (no device needed)
 pio device monitor       # Serial monitor at 115200 baud
 ```
@@ -116,8 +116,9 @@ Open `http://<DEVICE_IP>/` in a browser. Dashboard auto-refreshes every 5 second
 
 ## Code Conventions
 
-- **JSON responses**: Use stack-allocated `char[]` + `snprintf`, not `String` concatenation (prevents heap fragmentation on ESP8266's ~40KB heap)
+- **JSON responses**: Use stack-allocated `char[]` + `snprintf`, not `String` concatenation (avoids heap fragmentation)
 - **Timing**: All interval constants in `src/config.h`. Use local `unsigned long now = millis()` variable, not repeated `millis()` calls
-- **Main loop**: Ends with `yield()` for ESP8266 cooperative multitasking. Do NOT use `ESP.wdtFeed()` — `yield()` already feeds the software WDT
 - **WiFi reconnection**: Exponential backoff (30s → 5min cap), non-blocking time sync after reconnect (periodic NTP handles retries)
 - **Override duration format**: `[[hh:]mm[:ss]]` — single value = minutes, two parts = hh:mm, three parts = hh:mm:ss
+- **Persistent storage**: Use `Preferences` library (NVS) instead of EEPROM on ESP32-C3
+- **WiFi/HTTP libraries**: `WiFi.h` and `WebServer.h` (not ESP8266 variants)

@@ -11,7 +11,7 @@ I've put it into a separate metal package because it becomes hot even on a 1 kW 
 
 See [PROJECT_INFO.md](PROJECT_INFO.md) for details.
 
-## photos
+## Photos
 ![Box View](box_view.jpg)
 ![Setup View](setup_view.jpg)
 ![Web View](web_view.jpg)

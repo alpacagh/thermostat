@@ -1,10 +1,10 @@
 # Thermostat Firmware Requirements
 
 ## Hardware Reference
-- **MCU**: NodeMCU Amica (ESP8266MOD)
-- **Display**: GM009805V4.2 (SSD1306 I2C OLED) - D1/D2
-- **Sensor**: AM2302 (DHT22) - D5
-- **Relay**: SSR 3-32VDC/220VAC - D6
+- **MCU**: ESP32-C3 nano
+- **Display**: GM009805V4.2 (SSD1306 I2C OLED) — GPIO9 (SCL) / GPIO8 (SDA)
+- **Sensor**: AM2302 (DHT22) — GPIO10
+- **Relay**: SSR 3-32VDC/220VAC — GPIO7
 
 ---
 
@@ -316,9 +316,11 @@ config {
 
 ## 10. Libraries
 
-- `ESP8266WiFi` - WiFi connectivity
-- `WiFiUdp` - UDP broadcast discovery
-- `NTPClient` or `time.h` - Time sync
+- `WiFi` - WiFi connectivity
+- `WebServer` - HTTP server
 - `DHT` (Adafruit) - AM2302 sensor
 - `Adafruit_SSD1306` + `Adafruit_GFX` - OLED display
-- `EEPROM` - Persistent storage
+- `Preferences` - Persistent storage
+- `LittleFS` - File system for relay logs
+- `NimBLE` or `BLE` - Bluetooth Low Energy
+- `time.h` - Time sync

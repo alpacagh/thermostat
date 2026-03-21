@@ -1,8 +1,9 @@
 # Thermostat Project - Hardware Components
 
 ## MCU Development Board
-- **Board**: nodeMCU Amica
-- **MCU**: ESP8266MOD
+- **Board**: ESP32-C3 nano
+- **MCU**: ESP32-C3
+- **Connectivity**: WiFi + Bluetooth 5.0 (BLE)
 
 ## Display
 - **Board**: GM009805V4.2
@@ -18,7 +19,7 @@
 - **Output**: 220VAC
 
 ## Power Source
-- **Type**: mini-usb power supply for esp and relay
+- **Type**: USB power supply for ESP and relay
 
 ---
 
