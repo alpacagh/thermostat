@@ -36,75 +36,108 @@
 
 ## Wiring Diagram
 
+### DC Side — MCU, Sensor, Display, Relay Input
+
+```plantuml
+@startuml
+title DC Wiring — ESP32-C3 Thermostat
+left to right direction
+
+map "ESP32-C3 nano" as mcu {
+  V5 => 5V bus
+  GD => GND bus
+  GPIO7 => Relay DATA
+  GPIO8 => OLED SDA
+  GPIO9 => OLED SCL
+  GPIO10 => DHT DATA
+  USB => Power Input
+}
+
+map "OLED Display\n(GM009805V4.2)" as oled {
+  VCC => 5V bus
+  GND => GND bus
+  SCL => ESP GPIO9
+  SDA => ESP GPIO8
+}
+
+map "AM2302\n(DHT22 Sensor)" as dht {
+  VCC => 5V bus
+  DATA => ESP GPIO10
+  NC => not connected
+  GND => GND bus
+}
+
+map "10K Resistor\n(Pull-up)" as pullup {
+  A => 5V bus
+  B => DHT DATA
+}
+
+map "Coil Relay\nModule" as relay {
+  VCC => 5V bus
+  GND => GND bus
+  DATA => ESP GPIO7
+}
+
+mcu::GPIO9 --> oled::SCL
+mcu::GPIO8 --> oled::SDA
+mcu::V5 --> oled::VCC
+mcu::GD --> oled::GND
+
+mcu::GPIO10 --> dht::DATA
+mcu::V5 --> dht::VCC
+mcu::GD --> dht::GND
+
+pullup::A --> mcu::V5
+pullup::B --> dht::DATA
+
+mcu::GPIO7 --> relay::DATA
+mcu::V5 --> relay::VCC
+mcu::GD --> relay::GND
+
+@enduml
 ```
-                                    +---------------------+
-                                    |    OLED DISPLAY     |
-                                    |   (GM009805V4.2)    |
-                                    |                     |
-                                    | GND VCC SCL SDA     |
-                                    +--+---+---+---+------+
-                                       |   |   |   |
-                                       |   |   |   |
-                                       |   |   |   |
-     +---------------+                 |   |   |   |
-     |   AM2302      |                 |   |   |   |
-     | (DHT22 Sensor)|                 |   |   |   |
-     |               |                 |   |   |   |
-     | 1   2   3   4 |                 |   |   |   |
-     +--+---+---+--+-+                 |   |   |   |
-        |   |   |  |                   |   |   |   |
-      3.3V  |   NC GND                 |   |   |   |
-        |   |      |                   |   |   |   |
-        |   |      +---+               |   |   |   |
-        |   |          |               |   |   |   |
-        |  +-+         |               |   |   |   |
-        |  | | 10KΩ    |               |   |   |   |
-        |  +-+         |               |   |   |   |
-        |   |          |               |   |   |   |
-        +---+          |               |   |   |   |
-        |              |               |   |   |   |
-        |   +----------+---+-----------+   |   |   |
-        |   |              |               |   |   |
-      +-+---+--------------+---------------+---+---+--+
-      | V3  GD            10               9   8   7  |
-      |                                                |
-      |             ESP32-C3 nano                      |
-      |             (right side up)                    |
-      |                                                |
-      | V5  GD  RX  TX   2   1   0   6   5   4   3    |
-      +------------------------------------------------+
-              |                       |
-              |                       +--- SSR DC+ (GPIO7)
-              |
-            (USB)
 
+### AC Side — Relay Output to Heater (220VAC)
 
-     +--------------+
-     |     SSR      |
-     | Solid State  |
-     |    Relay     |
-     |              |
-     | DC+  DC-     |
-     +--+----+------+
-        |    |
-        |   GND
-        |
-        +--- from GPIO7
+```plantuml
+@startuml
+title AC Wiring — SSR to Heater (220VAC)
+left to right direction
 
+map "Mains\n220VAC" as mains {
+  L => Live
+  N => Neutral
+}
 
-     SSR AC OUTPUT SIDE (220VAC):
-     +------------------------------------------+
-     |                                          |
-     |  L (Live) ----+                          |
-     |               |     +--------+           |
-     |              SSR    | HEATER |           |
-     |               |     +---+----+           |
-     |               +---------|                |
-     |                         |                |
-     |  N (Neutral) -----------+                |
-     |                                          |
-     +------------------------------------------+
-     ⚠️  DANGER: 220VAC MAINS VOLTAGE
+map "Coil Relay\n(AC Side)" as relay {
+  COM => from Live
+  NO => to Heater
+}
+
+map "Heater" as heater {
+  HOT => from Relay
+  NEUTRAL => to Mains N
+}
+
+map "AC-DC Module\n(5V PSU)" as acdc {
+  AC_L => from Live
+  AC_N => from Neutral
+  DC_5V => to ESP32 V5
+  DC_GND => to ESP32 GD
+}
+
+mains::L --> relay::COM
+relay::NO --> heater::HOT
+heater::NEUTRAL --> mains::N
+mains::L --> acdc::AC_L
+mains::N --> acdc::AC_N
+
+note bottom of mains
+  DANGER: 220VAC MAINS VOLTAGE
+  Disconnect power before wiring
+end note
+
+@enduml
 ```
 
 ---
@@ -115,15 +148,15 @@
 | OLED Pin | ESP32-C3 Pin | GPIO  |
 |----------|--------------|-------|
 | GND      | GD           | -     |
-| VCC      | V3 (3.3V)    | -     |
+| VCC      | V5 (5V)      | -     |
 | SCL      | 9            | GPIO9 |
 | SDA      | 8            | GPIO8 |
 
 ### AM2302 Temperature Sensor
 | AM2302 Pin  | ESP32-C3 Pin | GPIO   | Notes |
 |-------------|--------------|--------|-------|
-| Pin 1 (VCC) | V3 (3.3V)    | -      | Power |
-| Pin 2 (DATA)| 10           | GPIO10 | + 10KΩ pull-up to 3.3V |
+| Pin 1 (VCC) | V5 (5V)      | -      | Power |
+| Pin 2 (DATA)| 10           | GPIO10 | + 10KΩ pull-up to 5V |
 | Pin 3 (NC)  | -            | -      | Not connected |
 | Pin 4 (GND) | GD           | -      | Ground |
 
@@ -144,14 +177,14 @@
 | 8         | GPIO8  | OLED SDA (I2C)  |
 | 10        | GPIO10 | AM2302 Data     |
 | 7         | GPIO7  | SSR Control     |
-| V3        | -      | Power (OLED, AM2302) |
+| V5        | -      | Power (OLED, AM2302) |
 | GD        | -      | Common Ground   |
 
 ---
 
 ## Notes
 
-1. **Pull-up Resistor**: The 10KΩ resistor between AM2302 DATA pin and 3.3V is required for reliable communication.
+1. **Pull-up Resistor**: The 10KΩ resistor between AM2302 DATA pin and 5V is required for reliable communication.
 
 2. **SSR Input**: The SSR accepts 3-32VDC, so the 3.3V GPIO output from ESP32-C3 is sufficient to trigger it.
 

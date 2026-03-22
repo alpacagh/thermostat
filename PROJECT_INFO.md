@@ -1,9 +1,9 @@
 # Thermostat Project - Hardware Components
 
 ## MCU Development Board
-- **Board**: ESP32-C3 nano
+- **Board**: ESP32-C3-0.42OED (china edition)
 - **MCU**: ESP32-C3
-- **Connectivity**: WiFi + Bluetooth 5.0 (BLE)
+- **Connectivity**: WiFi + Bluetooth 5.0 (BLE) + usb serial
 
 ## Display
 - **Board**: GM009805V4.2
@@ -14,12 +14,12 @@
 - **Type**: Digital temperature and humidity sensor (DHT22 compatible)
 
 ## Relay Module
-- **Type**: Solid State Relay (SSR)
-- **Input**: 3-32VDC
+- **Type**: Coil relay module
+- **Input**: 5VDC
 - **Output**: 220VAC
 
 ## Power Source
-- **Type**: USB power supply for ESP and relay
+- **Type**: AC/DC 220AC-5VDC 700mA
 
 ---
 

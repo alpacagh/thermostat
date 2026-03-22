@@ -10,6 +10,10 @@
 #include "serial_config.h"
 #include "thermo_webserver.h"
 #include "ble_command.h"
+#include <U8g2lib.h>
+
+// Integrated 72x40 display (software I2C on separate pins)
+static U8G2_SSD1306_72X40_ER_F_SW_I2C intDisplay(U8G2_R0, PIN_INT_DISPLAY_SCL, PIN_INT_DISPLAY_SDA, U8X8_PIN_NONE);
 
 // Timing
 static unsigned long last_sensor_read = 0;
@@ -29,11 +33,22 @@ void setup() {
         return;  // Stay in config mode
     }
 
-    // Initialize display
+    // Initialize primary display (external 128x64)
     if (!display.begin()) {
         Serial.println("OLED init failed!");
     }
     display.showBootMessage("Booting...");
+
+    // Initialize integrated 72x40 display
+    intDisplay.begin();
+    intDisplay.clearBuffer();
+    intDisplay.setFont(u8g2_font_6x10_tr);
+    const char* hello = "Hello World!";
+    int16_t x = (72 - intDisplay.getStrWidth(hello)) / 2;
+    int16_t y = (40 + intDisplay.getAscent()) / 2;
+    intDisplay.drawStr(x, y, hello);
+    intDisplay.sendBuffer();
+    Serial.println("Integrated display initialized");
 
     // Initialize sensor
     tempSensor.begin();

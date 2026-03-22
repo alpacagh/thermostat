@@ -4,14 +4,19 @@ This is a one-day project to create an external thermostat for my dumb room heat
 
 - Firmware is implemented mostly with Claude code.
 - Hardware is made from parts I found in my drawer.
+    - and some stuff i bought online to make it a bit prettier
 - Packaging is something I found in my kitchen.
-
-You may notice a separate box from mints with a thick wire attached to it: that is an SSR relay.  
-I've put it into a separate metal package because it becomes hot even on a 1 kW (5 A) load. I'll probably replace it with a coil relay later for more compact packaging.
 
 See [PROJECT_INFO.md](PROJECT_INFO.md) for details.
 
 ## Photos
+Old box view on ESP8266 old big AC/DC and external relay block.
 ![Box View](box_view.jpg)
+
+
+Current setup view.
 ![Setup View](setup_view.jpg)
+
+
+Web interface view on mobile.
 ![Web View](web_view.jpg)

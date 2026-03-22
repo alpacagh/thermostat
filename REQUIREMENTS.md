@@ -1,10 +1,12 @@
 # Thermostat Firmware Requirements
 
 ## Hardware Reference
-- **MCU**: ESP32-C3 nano
+- **MCU**: ESP32-C3
+- **MCU board**: ESP32-C3-0.42OED (china edition)
 - **Display**: GM009805V4.2 (SSD1306 I2C OLED) — GPIO9 (SCL) / GPIO8 (SDA)
+- **Secondary display**: xxxx I2C OLED 72x40 on GPIO5+GPIO6 (SDA+SCL)
 - **Sensor**: AM2302 (DHT22) — GPIO10
-- **Relay**: SSR 3-32VDC/220VAC — GPIO7
+- **Relay**: Coil relay module 5VDC/220VAC — GPIO7
 
 ---
 
@@ -21,7 +23,7 @@
 
 ### Safety Features
 - **Upper temperature limit**: relay OFF when temperature >= 30°C (`UPPER_TEMP_LIMIT`), overrides everything including manual overrides
-- **Minimum cycle time**: 2 minutes between relay state changes
+- **Minimum cycle time**: 2 seconds between relay state changes
 - **Sensor failure**: relay OFF (fail-safe)
 - **No matching schedule**: relay OFF
 
@@ -163,7 +165,7 @@ end note
 
 ### Manual Override
 - Network command to force relay ON/OFF
-- Optional timed duration in `[[hh:]mm[:ss]]` format (single value = minutes, two parts = hh:mm, three parts = hh:mm:ss)
+- Optional timed duration in `[hh:]mm[:ss]` format (single value = minutes, two parts = hh:mm, three parts = hh:mm:ss)
 - Timed override auto-expires after the specified duration
 - Indefinite override (no duration) persists until manually cancelled
 
@@ -192,11 +194,6 @@ Show on screen:
 - Sync time on boot
 - Configurable timezone (stored in EEPROM)
 - Periodic resync (hourly)
-
-### LAN Discovery (UDP Broadcast)
-- Listen on designated UDP port
-- Respond to broadcast discovery packets
-- Response includes: device type, IP address, TCP port
 
 ### TCP Command Server
 - Text-based protocol over TCP
@@ -285,8 +282,8 @@ RESPONSE: OK [DATA]\n  or  ERR [MESSAGE]\n
 
 ### Format
 ```
-REQUEST:  COMMAND [ARGS]
-RESPONSE: OK [DATA]  or  ERR [MESSAGE]
+REQUEST:  `COMMAND [ARGS]`
+RESPONSE: `OK [DATA]`  or  `ERR [MESSAGE]`
 ```
 
 ### Commands

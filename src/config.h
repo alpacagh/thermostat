@@ -12,10 +12,14 @@
 // DHT sensor type
 #define DHT_TYPE        DHT22
 
-// OLED display
+// OLED display (external)
 #define OLED_WIDTH      128
 #define OLED_HEIGHT     64
 #define OLED_ADDRESS    0x3C
+
+// Integrated display (72x40 SSD1306)
+#define PIN_INT_DISPLAY_SDA  5   // GPIO5
+#define PIN_INT_DISPLAY_SCL  6   // GPIO6
 
 // Timing constants (milliseconds)
 #define SENSOR_READ_INTERVAL    2000
