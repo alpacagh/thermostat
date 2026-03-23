@@ -2,7 +2,7 @@
 
 ## Hardware Reference
 - **MCU**: ESP32-C3
-- **MCU board**: ESP32-C3-0.42OED (china edition)
+- **MCU board**: ESP32-C3-0.42OED (china edition) https://github.com/01Space/ESP32-C3-0.42LCD/tree/main
 - **Display**: GM009805V4.2 (SSD1306 I2C OLED) — GPIO9 (SCL) / GPIO8 (SDA)
 - **Secondary display**: xxxx I2C OLED 72x40 on GPIO5+GPIO6 (SDA+SCL)
 - **Sensor**: AM2302 (DHT22) — GPIO10
